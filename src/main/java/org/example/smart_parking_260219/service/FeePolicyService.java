@@ -43,10 +43,11 @@ public class FeePolicyService {
         }
     }
 
+    // [정책 등록]
     public void addPolicy(FeePolicyDTO feePolicyDTO) {
         log.info("addPolicy()");
 
-
+        // 수치 입력시 기본값이 0보다 커야 함.
         if (feePolicyDTO.getDefaultTime() <= 0) {
             throw new IllegalArgumentException("defaultTime은 0보다 커야 합니다.");
         }
@@ -68,6 +69,9 @@ public class FeePolicyService {
         // Dto -> vo
         FeePolicyVO originalVo = toVo(feePolicyDTO);
 
+        double lightDiscount = originalVo.getLightDiscount() * 0.01;
+        double disabledDiscount = originalVo.getDisabledDiscount() * 0.01;
+
         FeePolicyVO feePolicyVo = FeePolicyVO.builder()
                 .policyId(originalVo.getPolicyId())
                 .gracePeriod(originalVo.getGracePeriod())
@@ -75,8 +79,8 @@ public class FeePolicyService {
                 .defaultFee(originalVo.getDefaultFee())
                 .extraTime(originalVo.getExtraTime())
                 .extraFee(originalVo.getExtraFee())
-                .lightDiscount(originalVo.getLightDiscount())
-                .disabledDiscount(originalVo.getDisabledDiscount())
+                .lightDiscount(lightDiscount)
+                .disabledDiscount(disabledDiscount)
                 .subscribedFee(originalVo.getSubscribedFee())
                 .maxDailyFee(originalVo.getMaxDailyFee())
                 .isActive(true)
@@ -107,12 +111,14 @@ public class FeePolicyService {
         return toDto(feePolicyVO);
     }
 
+    // [단건 조회] 요금 정책 상세 출력 (ID 기반)
     public FeePolicyDTO getPolicyById(int policyId) throws Exception {
         FeePolicyVO vo = feePolicyDAO.selectPolicyById(policyId);
         if (vo == null) return null;
         return toDto(vo);
     }
 
+    // 특정 ID의 정책만 활성화 나머지 정책은 비활성화
     public void applyPolicy(int id) throws Exception {
         // 1. 현재 활성화된 모든 정책을 꺼버림 (작성하신 메서드 호출)
         feePolicyDAO.deactivateAllPolicies();
